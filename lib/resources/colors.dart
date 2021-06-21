@@ -1,0 +1,12 @@
+
+import 'package:flutter/cupertino.dart';
+
+const Color NEUTRAL_WHITE = Color.fromRGBO(230, 230, 230, 1.0);
+const ADD_ITEM_PAGE_CATEGORY_CARD_COLOR = Color.fromRGBO(246, 248, 249, 1.0);
+const ADD_ITEM_PAGE_NOTE_CARD_COLOR = Color.fromRGBO(250, 245, 233, 1.0);
+const ADD_ITEM_PAGE_CATEGORY_TEXT_COLOR = Color.fromRGBO(102, 107, 114, 1.0);
+const ADD_ITEM_PAGE_NOTE_TEXT_COLOR = Color.fromRGBO(193, 170, 98, 1.0);
+const ADD_ITEM_DELETE_BACKGROUND_COLOR = Color.fromRGBO(250, 240, 240, 1.0);
+const ADD_ITEM_DELETE_TEXT_COLOR = Color.fromRGBO(153, 44, 54, 1.0);
+
+const ITEM_DETAILS_FINISH_RENTING_BACKGROUND_COLOR = Color.fromRGBO(240, 250, 240, 1.0);
