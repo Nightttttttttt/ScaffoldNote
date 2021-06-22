@@ -7,8 +7,6 @@ import 'package:scaffold_note/resources/dimens.dart';
 class RentItemView extends StatelessWidget {
 
   final RentItemVO rentItem;
-  // final engNumber = ['0','1','2','3','4','5','6','7','8','9'];
-  // final mmNumber = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
 
 
   RentItemView(this.rentItem);
@@ -92,7 +90,7 @@ class RentItemView extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(rentItem.note == null ? 'Empty' : rentItem.note),
+                    Text(rentItem.note.length > 25 ? rentItem.note.substring(0,24) + ' ...': rentItem.note),
                     Spacer(),
                     Icon(
                       Icons.history,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:scaffold_note/data/model/scaffold_model.dart';
 import 'package:scaffold_note/data/model/scaffold_model_impl.dart';
 import 'package:scaffold_note/data/vo/category_vo.dart';
+import 'package:scaffold_note/data/vo/validator.dart';
 import 'package:scaffold_note/resources/colors.dart';
 import 'package:scaffold_note/resources/dimens.dart';
 import 'package:scaffold_note/resources/strings.dart';
@@ -23,20 +25,75 @@ class _CategoryPageState extends State<CategoryPage> {
   int categoryPrice = 0;
   int categoryPrepaidPrice = 0;
   int categoryMinimum = 0;
-  int categoryMaximum = 5;
+  int categoryMaximum = 100;
   @override
   void initState() {
     super.initState();
     categoryList = mScaffoldModel.getAllCategoryFromDatabase();
   }
 
+  Validator checkValidation(){
+    String msg = '';
+    bool pass = true;
+    if(categoryName.length > 25){
+      pass = false;
+      msg += "Name too long.\n";
+    }
+    if(categoryUnit.length > 10){
+      pass = false;
+      msg += "Unit name too long.\n";
+    }
+
+    if(categoryUnit == '' && categoryName == ''){
+      pass = false;
+      msg += "Name and unit can'\t be empty.\n";
+    }
+
+
+    if(categoryPrice == 0 && categoryPrepaidPrice == 0 ){
+      pass = false;
+      msg += "price and prepaid price can\'t be zero.\n";
+    }
+
+    if(categoryPrepaidPrice > categoryPrice){
+      pass = false;
+      msg += "Invalid! price must greater than prepaid.\n";
+    }
+
+    if(categoryMinimum > categoryMaximum){
+      pass = false;
+      msg += "Invalid! maximum must greater than minimum.\n";
+    }
+    msg += '**********';
+
+    Validator validator = Validator(pass, msg);
+
+    return validator;
+  }
 
   void addCategoryToDB(){
-    CategoryVO categoryVO = CategoryVO(categoryName, categoryPrice, categoryPrepaidPrice, categoryUnit, categoryMinimum,categoryMaximum,getUniqueId());
-    mScaffoldModel.addCategoryToDatabase(categoryVO);
-    setState(() {
-      categoryList = mScaffoldModel.getAllCategoryFromDatabase();
-    });
+    Validator validator = checkValidation();
+
+    if(validator.pass){
+      CategoryVO categoryVO = CategoryVO(categoryName, categoryPrice, categoryPrepaidPrice, categoryUnit, categoryMinimum,categoryMaximum,getUniqueId());
+      mScaffoldModel.addCategoryToDatabase(categoryVO);
+      setState(() {
+        categoryList = mScaffoldModel.getAllCategoryFromDatabase();
+      });
+      Navigator.pop(context);
+    }else{
+      Fluttertoast.showToast(
+          msg: validator.condition,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+
+
   }
 
   String getUniqueId(){
@@ -111,7 +168,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
                 Row(
                   children: [
-                    
+
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +209,6 @@ class _CategoryPageState extends State<CategoryPage> {
           }, child: Text('Cancel')),
           TextButton(onPressed: (){
             addCategoryToDB();
-            Navigator.pop(context);
           }, child: Text('Save')),
           SizedBox(width: MARGIN_MEDIUM)
         ],

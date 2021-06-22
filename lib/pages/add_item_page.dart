@@ -1,10 +1,12 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:scaffold_note/data/model/scaffold_model.dart';
 import 'package:scaffold_note/data/model/scaffold_model_impl.dart';
 import 'package:scaffold_note/data/vo/category_vo.dart';
 import 'package:scaffold_note/data/vo/rent_item_vo.dart';
+import 'package:scaffold_note/data/vo/validator.dart';
 import 'package:scaffold_note/resources/colors.dart';
 import 'package:scaffold_note/resources/dimens.dart';
 import 'package:scaffold_note/resources/strings.dart';
@@ -21,15 +23,15 @@ class AddItemPage extends StatefulWidget {
 }
 
 class _AddItemPageState extends State<AddItemPage> {
-  List<String> categoryItem;
-  List<CategoryVO> categoryList;
+  List<String> categoryItem = [];
+  List<CategoryVO> categoryList = [];
   String chosenItem;
   String chosenDate;
   String prePaidAmount = '';
   DateTime userPicked;
   List<String> months = ['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec'];
   DateTime today = DateTime.now();
-  String noteText;
+  String noteText = '';
   double sliderItemCount = 100;
   int minAmount;
   int maxAmount;
@@ -61,11 +63,60 @@ class _AddItemPageState extends State<AddItemPage> {
     DateTime now = DateTime.now();
     return now.millisecondsSinceEpoch.toString();
   }
+  Validator checkValidation(){
+    String msg = '';
+    bool pass = true;
+
+    if(categoryList.isEmpty){
+      pass = false;
+      msg += "Category can\'t be empty. \n";
+    }
+
+    if(noteText == ''){
+      pass = false;
+      msg += "note can\'t be empty. \n";
+    }
+
+
+    if(sliderItemCount.round() == 0 ){
+      pass = false;
+      msg += "item count can\'t be zero.\n";
+    }
+
+    msg += '**********';
+
+    Validator validator = Validator(pass, msg);
+
+    return validator;
+  }
+
 
   void saveRentItemVO(){
-    RentItemVO rentItem = RentItemVO(categoryList[categoryItem.indexOf(chosenItem)], sliderItemCount.round(), userPicked, null, noteText, isPrepaid, true, false, false, 0, getUniqueId(),prePaidAmount != '' ? prePaidAmount : '0');
-    mScaffoldModel.addRentItemToDatabase(rentItem);
-    Navigator.pop(context);
+
+    Validator validator = checkValidation();
+
+    if(validator.pass){
+      RentItemVO rentItem = RentItemVO(categoryList[categoryItem.indexOf(chosenItem)], sliderItemCount.round(), userPicked, null, noteText, isPrepaid, true, false, false, 0, getUniqueId(),prePaidAmount != '' ? prePaidAmount : '0');
+      mScaffoldModel.addRentItemToDatabase(rentItem);
+      Fluttertoast.showToast(
+          msg: "Success",
+          fontSize: 16.0
+      );
+      Navigator.pop(context);
+    }else{
+      Fluttertoast.showToast(
+          msg: validator.condition,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+
+
+
   }
 
   @override
@@ -74,16 +125,16 @@ class _AddItemPageState extends State<AddItemPage> {
     setState(() {
       // Initialize Category
       categoryList = mScaffoldModel.getAllCategoryFromDatabase();
-      categoryItem = categoryList.map((category) => category.name).toList();
-      chosenItem = categoryItem[0];
+      categoryItem = categoryList.isNotEmpty ? categoryList.map((category) => category.name).toList() : [];
+      chosenItem = categoryItem.isNotEmpty ? categoryItem[0] :'Empty';
 
       // Initialize Date
       chosenDate = dateTimeToReadableFormat(today);
       userPicked = today;
 
       // Initialize max & min bound
-      maxAmount = categoryList[categoryItem.indexOf(chosenItem)].maxAmount;
-      minAmount = categoryList[categoryItem.indexOf(chosenItem)].minAmount;
+      maxAmount = categoryItem.isNotEmpty ? categoryList[categoryItem.indexOf(chosenItem)].maxAmount : 10;
+      minAmount = categoryItem.isNotEmpty ? categoryList[categoryItem.indexOf(chosenItem)].minAmount : 0;
       sliderItemCount = maxAmount * 0.1 ;
 
 
@@ -176,6 +227,7 @@ class _AddItemPageState extends State<AddItemPage> {
                         });
                       }),
                   SizedBox(height: MARGIN_MEDIUM),
+                  categoryList.isNotEmpty ?
                   PriceCard(categoryList[categoryItem.indexOf(chosenItem)],isPrepaid, prepaidOnChanged: (value){
                     prePaidAmount = value;
                    // print(prePaidAmount);
@@ -186,7 +238,7 @@ class _AddItemPageState extends State<AddItemPage> {
 
                     });
                   },
-                  ),
+                  ) : Container(),
                   SizedBox(height: MARGIN_MEDIUM),
 
 
@@ -451,7 +503,7 @@ class CategoryCard extends StatelessWidget {
                 ),
               ),
               Spacer(),
-              CardDropDownView(
+              categoryItem.isNotEmpty ? CardDropDownView(
                 itemList: categoryItem,
                 iconData: Icons.add,
                 chosenItem: chosenItem,
@@ -461,6 +513,20 @@ class CategoryCard extends StatelessWidget {
                 onTap: () {
                   onItemTap();
                 },
+              ) :
+              Card(
+                color: Colors.white,
+                shadowColor: Colors.black,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius:
+                    BorderRadius.circular(MARGIN_MEDIUM + MARGIN_SMALL)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: MARGIN_MEDIUM_2X,
+                      vertical: MARGIN_MEDIUM_2X),
+                  child: Text('-Empty Category-',style: TextStyle(fontStyle: FontStyle.italic),),
+                ),
               ),
             ],
           ),
@@ -503,3 +569,5 @@ class CategoryCard extends StatelessWidget {
     );
   }
 }
+
+
